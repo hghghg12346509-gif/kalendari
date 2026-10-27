@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Мульти-Планировщик со Временем</title>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>Мой Дневник и Планировщик</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #1a1a2e;
-            --bg-light: #16213e;
+            --bg-dark: #121220;
+            --bg-light: #1e1e32;
             --primary: #e94560;
+            --accent: #0f3460;
             --text: #fff;
-            --card-bg: rgba(255, 255, 255, 0.1);
-            --border: rgba(255, 255, 255, 0.2);
+            --border: rgba(255, 255, 255, 0.15);
         }
 
         * {
@@ -32,531 +32,369 @@
             position: relative;
         }
 
-        /* --- ЛЕТАЮЩИЕ ФИГУРЫ НА ФОНЕ --- */
+        /* --- ЛЕТАЮЩИЙ ФОН --- */
         #bg-animations {
-            position: absolute;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: 0;
-            pointer-events: none;
-            overflow: hidden;
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 0; pointer-events: none; overflow: hidden;
         }
-
         .floating-item {
-            position: absolute;
-            opacity: 0.15;
-            animation: floatAnim infinite linear;
+            position: absolute; opacity: 0.1; animation: floatAnim infinite linear;
         }
-
         @keyframes floatAnim {
-            0% { transform: translateY(0) rotate(0deg) translateX(0); }
-            50% { transform: translateY(-30px) rotate(180deg) translateX(20px); }
-            100% { transform: translateY(0) rotate(360deg) translateX(0); }
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-40px) rotate(180deg); }
+            100% { transform: translateY(0) rotate(360deg); }
         }
 
-        .shape-triangle {
-            width: 0; height: 0;
-            border-left: 30px solid transparent;
-            border-right: 30px solid transparent;
-            border-bottom: 50px solid #e94560;
+        /* --- ВЕРХНЕЕ МЕНЮ --- */
+        .top-nav {
+            display: flex; justify-content: center; gap: 10px;
+            padding: 15px; background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px); z-index: 10;
+            border-bottom: 1px solid var(--border);
         }
-        .shape-square {
-            width: 40px; height: 40px;
-            background-color: #0f3460;
-            border: 2px solid #533483;
+        .nav-btn {
+            padding: 10px 25px; border-radius: 20px;
+            font-size: 16px; font-weight: 900; cursor: pointer;
+            border: 2px solid transparent; transition: 0.2s;
+            background: transparent; color: #aaa;
         }
-        .shape-circle {
-            width: 45px; height: 45px;
-            border-radius: 50%;
-            background-color: #533483;
+        .nav-btn.active {
+            background: var(--primary); color: white;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
         }
 
         /* --- ОБЩИЕ ЭКРАНЫ --- */
         .screen {
-            display: none;
-            width: 100%; height: 100%;
-            flex-direction: column;
+            display: none; flex: 1; width: 100%;
+            overflow: hidden; flex-direction: column;
             z-index: 10;
-            animation: fadeIn 0.3s ease;
         }
-        .screen.active { display: flex; }
+        .screen.active { display: flex; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* --- 1. ЭКРАН ВХОДА --- */
-        #login-screen {
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 20px;
-            background: rgba(0,0,0,0.3);
+        /* --- 1. РАСПИСАНИЕ --- */
+        .table-controls {
+            padding: 10px 20px; display: flex; gap: 10px; justify-content: flex-end;
         }
-        .logo { font-size: 80px; margin-bottom: 20px; animation: float 3s infinite alternate; }
-        @keyframes float { from { transform: translateY(0); } to { transform: translateY(-15px); } }
-        h1 { margin: 0 0 10px 0; font-size: 36px; }
-        p { color: #ccc; margin-bottom: 40px; font-size: 16px; max-width: 400px; }
-        
-        .google-btn {
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            background: white; color: #333;
-            border: none; padding: 15px 30px;
-            font-size: 18px; font-weight: 900;
-            border-radius: 30px; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.2s;
-        }
-        .google-btn:hover { transform: scale(1.05); }
-        .google-btn img { width: 24px; height: 24px; }
-
-        /* --- 2. ЭКРАН ШАБЛОНОВ --- */
-        #templates-screen {
-            padding: 20px;
-            overflow-y: auto;
-        }
-        
-        .header-bar {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 20px; padding: 15px;
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px; border: 1px solid var(--border);
-            position: sticky; top: 0; z-index: 20;
-            flex-wrap: wrap; gap: 10px;
+        .ctrl-btn {
+            background: var(--accent); color: white; border: 1px solid var(--border);
+            padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;
         }
 
-        .user-info { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 14px; }
-        
-        .custom-input-group { display: flex; gap: 10px; width: 100%; margin-top: 10px; }
-        .custom-input-group input {
-            flex: 1; padding: 12px; border-radius: 10px;
-            border: none; background: rgba(255,255,255,0.9);
-            font-size: 16px; color: #333; font-weight: bold; outline: none;
+        .table-wrapper {
+            flex: 1; overflow: auto; padding: 0 20px 20px 20px;
         }
-        .custom-input-group button {
-            background: #0f3460; color: white; border: 2px solid #533483;
-            padding: 0 20px; border-radius: 10px; cursor: pointer; font-weight: bold;
-        }
-
-        .templates-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-            gap: 15px;
-            padding-bottom: 100px; 
-        }
-        .template-card {
-            border-radius: 15px;
-            padding: 15px 10px;
-            text-align: center;
-            cursor: pointer;
-            color: white;
-            font-weight: 900;
-            font-size: 14px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            transition: all 0.2s;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            height: 110px;
-            position: relative;
-            border: 3px solid transparent;
-        }
-        .template-card:hover { transform: translateY(-5px); }
-        .template-card.selected {
-            border-color: #fff;
-            transform: scale(0.95);
-            box-shadow: 0 0 20px rgba(255,255,255,0.5);
-        }
-        .template-card.selected::after {
-            content: '✓'; position: absolute; top: 5px; right: 10px;
-            font-size: 20px; color: #fff; text-shadow: 0 0 5px #000;
-        }
-        
-        .template-icon { font-size: 30px; margin-bottom: 5px; }
-
-        #bottom-bar {
-            position: fixed;
-            bottom: 0; left: 0; width: 100%;
-            padding: 20px;
-            background: rgba(26, 26, 46, 0.9);
-            backdrop-filter: blur(10px);
-            border-top: 1px solid var(--border);
-            display: none;
-            justify-content: center;
-            z-index: 30;
-        }
-        #bottom-bar.active { display: flex; }
-        .btn-create {
-            background: var(--primary);
-            color: white; border: none;
-            padding: 15px 40px; border-radius: 30px;
-            font-size: 18px; font-weight: 900; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
-            width: 100%; max-width: 400px;
-            transition: transform 0.2s;
-        }
-        .btn-create:active { transform: scale(0.95); }
-
-        /* --- 3. ЭКРАН РЕДАКТОРА --- */
-        #editor-screen { background: rgba(22, 33, 62, 0.95); }
-        
-        .toolbar {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 15px 20px; background: rgba(0,0,0,0.3);
-            border-bottom: 1px solid var(--border);
-        }
-        .btn-back {
-            background: rgba(255,255,255,0.1); border: none; color: white;
-            padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold;
-        }
-        .btn-save {
-            background: #2ed573; color: white; border: none;
-            padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;
-        }
-
-        /* Таблица */
-        .table-container { flex: 1; overflow: auto; padding: 20px; }
         table {
-            border-collapse: collapse; width: 100%; min-width: 700px; /* Чуть шире из-за времени */
-            background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden;
+            border-collapse: collapse; width: 100%; min-width: 800px;
+            background: rgba(255,255,255,0.03); border-radius: 10px; overflow: hidden;
         }
         th, td {
-            border: 1px solid var(--border);
-            padding: 10px;
-            text-align: left;
-            outline: none;
+            border: 1px solid var(--border); padding: 8px; text-align: center;
         }
         th {
-            background: #0f3460;
-            color: white; font-weight: 900; text-align: center;
-            position: sticky; top: 0;
+            background: rgba(15, 52, 96, 0.9); color: white; font-weight: 900;
+            position: sticky; top: 0; outline: none; min-width: 40px;
         }
-        td { font-size: 15px; }
+        /* Колонки День и Время фиксированной ширины */
+        th:nth-child(1), td:nth-child(1) { text-align: left; width: 150px; min-width: 150px; }
+        th:nth-child(2), td:nth-child(2) { width: 80px; min-width: 80px; }
+
+        td { font-size: 15px; outline: none; transition: background 0.2s; }
+        td:focus, th:focus { background: rgba(233, 69, 96, 0.2); }
         
-        .check-cell { text-align: center; width: 50px; }
         input[type="checkbox"] {
-            width: 24px; height: 24px; cursor: pointer;
-            accent-color: var(--primary);
+            width: 22px; height: 22px; cursor: pointer; accent-color: var(--primary);
         }
-        
-        .editable-cell { cursor: text; transition: background 0.2s; }
-        .editable-cell:focus { background: rgba(255,255,255,0.1); }
-
-        /* СТИЛИ ДЛЯ ИНПУТА ВРЕМЕНИ */
         input[type="time"] {
-            width: 100%;
-            background: transparent;
-            border: none;
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            font-family: 'Nunito', sans-serif;
-            outline: none;
-            cursor: pointer;
-            color-scheme: dark; /* Делает иконку часов белой в браузере */
-        }
-        input[type="time"]::-webkit-calendar-picker-indicator {
-            cursor: pointer;
-            filter: invert(1); /* Принудительно делаем иконку белой */
+            background: transparent; border: none; color: white;
+            font-size: 14px; font-weight: bold; outline: none; color-scheme: dark; width: 100%;
         }
 
-        .add-row-btn {
-            display: block; width: 100%; padding: 15px;
-            background: rgba(255,255,255,0.1); color: white;
-            border: 2px dashed var(--border); border-radius: 10px;
-            margin-top: 15px; cursor: pointer; font-weight: bold;
+        /* --- 2. ДНЕВНИК --- */
+        #diary-screen {
+            padding: 20px;
+            background: url('https://www.transparenttextures.com/patterns/notebook.png'); /* Эффект бумаги */
         }
-        .add-row-btn:hover { background: rgba(255,255,255,0.2); }
+        .diary-container {
+            flex: 1; background: #fffde7; border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column; overflow: hidden;
+            border-left: 5px solid #ff5252; /* Красная линия как в тетради */
+        }
+        .diary-tools {
+            display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+            padding: 15px; background: #fff9c4; border-bottom: 1px solid #ddd;
+        }
+        .diary-tools select, .diary-tools input[type="color"] {
+            padding: 5px; border-radius: 5px; border: 1px solid #ccc;
+            font-weight: bold; cursor: pointer;
+        }
+        .mood-btn {
+            font-size: 20px; background: none; border: none; cursor: pointer;
+            opacity: 0.5; transition: 0.2s;
+        }
+        .mood-btn.active { opacity: 1; transform: scale(1.2); }
+
+        #diary-text {
+            flex: 1; padding: 30px; font-family: 'Caveat', cursive;
+            font-size: 24px; line-height: 1.5; color: #222;
+            border: none; resize: none; outline: none; background: transparent;
+        }
+
+        /* Индикатор сохранения */
+        #save-indicator {
+            position: fixed; bottom: 20px; right: 20px;
+            background: #2ed573; color: white; padding: 10px 20px;
+            border-radius: 30px; font-weight: bold; opacity: 0;
+            transition: opacity 0.3s; pointer-events: none; z-index: 100;
+        }
     </style>
 </head>
 <body>
 
     <div id="bg-animations"></div>
 
-    <div id="login-screen" class="screen active">
-        <div class="logo">⏱️</div>
-        <h1>Мульти-Планировщик</h1>
-        <p>Планируй свои дни по часам и достигай целей с комфортом!</p>
-        <button class="google-btn" onclick="fakeGoogleLogin()">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="G">
-            Войти через Google
-        </button>
+    <div class="top-nav">
+        <button class="nav-btn active" onclick="switchTab('schedule')">📅 Расписание</button>
+        <button class="nav-btn" onclick="switchTab('diary')">✍️ Дневник</button>
     </div>
 
-    <div id="templates-screen" class="screen">
-        <div class="header-bar">
-            <div class="user-info">
-                <div class="user-avatar" style="font-size:20px;">👤</div>
-                <span>Мой Аккаунт</span>
-            </div>
-            <div class="custom-input-group">
-                <input type="text" id="custom-input" placeholder="Свой вариант (напр. Футбол)..." onkeypress="handleKeyPress(event)">
-                <button onclick="addCustomTemplate()">Добавить</button>
-            </div>
+    <!-- РАСПИСАНИЕ -->
+    <div id="schedule-screen" class="screen active">
+        <div class="table-controls">
+            <button class="ctrl-btn" onclick="addColumn()">+ Добавить день</button>
+            <button class="ctrl-btn" onclick="addRow()">+ Добавить строку</button>
         </div>
-        <h2 style="margin-top: 10px;">Выбери цели (можно несколько):</h2>
-        <div class="templates-grid" id="templates-grid"></div>
-    </div>
-
-    <div id="bottom-bar">
-        <button class="btn-create" onclick="createCombinedTable()">Создать расписание</button>
-    </div>
-
-    <div id="editor-screen" class="screen">
-        <div class="toolbar">
-            <button class="btn-back" onclick="goBackToTemplates()">← Назад</button>
-            <div style="font-size: 16px; font-weight: bold; color: var(--primary);" id="editor-title">Мой план</div>
-            <button class="btn-save" onclick="saveTable()">Сохранить</button>
-        </div>
-        
-        <div class="table-container">
+        <div class="table-wrapper">
             <table id="schedule-table">
                 <thead id="table-head"></thead>
                 <tbody id="table-body"></tbody>
             </table>
-            <button class="add-row-btn" onclick="addNewRow()">+ Добавить еще один день</button>
         </div>
     </div>
 
+    <!-- ДНЕВНИК -->
+    <div id="diary-screen" class="screen">
+        <div class="diary-container">
+            <div class="diary-tools">
+                <select id="diary-day-select" onchange="loadDiary()">
+                    <!-- Заполняется в JS -->
+                </select>
+                
+                <div style="display:flex; gap:5px;">
+                    <button class="mood-btn" onclick="setMood('😊')" id="mood-1">😊</button>
+                    <button class="mood-btn" onclick="setMood('😢')" id="mood-2">😢</button>
+                    <button class="mood-btn" onclick="setMood('😡')" id="mood-3">😡</button>
+                    <button class="mood-btn" onclick="setMood('😴')" id="mood-4">😴</button>
+                </div>
+
+                <input type="color" id="diary-color" value="#222222" onchange="changeDiaryColor()" title="Цвет чернил">
+            </div>
+            <textarea id="diary-text" placeholder="День первый. Сегодня я проснулся и подумал..." oninput="saveDiary()"></textarea>
+        </div>
+    </div>
+
+    <div id="save-indicator">Сохранено ✓</div>
+
     <script>
-        // --- ФОНОВЫЕ АНИМАЦИИ ---
+        // --- ФОН ---
         const bgContainer = document.getElementById('bg-animations');
-        const shapeClasses = ['shape-triangle', 'shape-square', 'shape-circle'];
-        const emojis = ['📅', '🗓️', '📆', '⏰'];
-        
-        for (let i = 0; i < 25; i++) {
+        for (let i = 0; i < 20; i++) {
             const el = document.createElement('div');
             el.classList.add('floating-item');
-            
-            if (Math.random() > 0.5) {
-                el.classList.add(shapeClasses[Math.floor(Math.random() * shapeClasses.length)]);
-            } else {
-                el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-                el.style.fontSize = (30 + Math.random() * 30) + 'px';
-            }
-            
+            el.textContent = ['📅', '✍️', '⏰', '📖', '✨'][Math.floor(Math.random() * 5)];
+            el.style.fontSize = (30 + Math.random() * 40) + 'px';
             el.style.left = Math.random() * 100 + 'vw';
             el.style.top = Math.random() * 100 + 'vh';
-            el.style.animationDuration = (10 + Math.random() * 20) + 's';
-            el.style.animationDelay = (Math.random() * 5) + 's';
-            
-            if(!el.textContent) {
-                const hue = Math.floor(Math.random() * 360);
-                if (el.classList.contains('shape-square') || el.classList.contains('shape-circle')) {
-                    el.style.backgroundColor = `hsl(${hue}, 70%, 50%)`;
-                    el.style.borderColor = `hsl(${hue}, 70%, 70%)`;
-                } else if (el.classList.contains('shape-triangle')) {
-                    el.style.borderBottomColor = `hsl(${hue}, 70%, 50%)`;
-                }
-            }
+            el.style.animationDuration = (15 + Math.random() * 20) + 's';
             bgContainer.appendChild(el);
         }
 
-        // --- ДАННЫЕ ---
-        const baseColors = ['#FF5733', '#33FF57', '#3357FF', '#FF33A8', '#FFC300', '#8E44AD', '#E67E22', '#16A085', '#2980B9', '#C0392B', '#D35400', '#27AE60', '#2C3E50', '#F39C12', '#1ABC9C', '#9B59B6', '#34495E', '#F1C40F', '#FF6B6B', '#4ECDC4'];
-        const baseNames = ["Спорт", "Учеба", "Работа", "Чтение", "Планы", "Здоровье", "Финансы", "Хобби", "Уборка", "Отдых", "Английский", "Тренировки", "Проекты", "Идеи", "Дневник", "Привычки", "Код", "Рисование", "Музыка", "Кулинария", "Йога", "Марафон", "Курс", "Задачи", "Дом"];
-        const icons = ["🏃", "📚", "💼", "📖", "📝", "❤️", "💰", "🎨", "🧹", "🌴", "🇬🇧", "💪", "🚀", "💡", "📔", "🔥", "💻", "🖌️", "🎵", "🍳"];
-
-        let allTemplates = [];
-        for (let i = 0; i < 25; i++) {
-            allTemplates.push({ id: 't_' + i, name: baseNames[i], color: baseColors[i], icon: icons[i % icons.length] });
-        }
-
-        let selectedTemplates = []; 
-        let currentTableData = [];  
-        let tableHeaders = [];      
-
-        // --- 1. ВХОД ---
-        function fakeGoogleLogin() {
-            document.getElementById('login-screen').classList.remove('active');
-            document.getElementById('templates-screen').classList.add('active');
-            renderTemplates();
-        }
-
-        // --- 2. ОТРИСОВКА ШАБЛОНОВ ---
-        function renderTemplates() {
-            const grid = document.getElementById('templates-grid');
-            grid.innerHTML = '';
+        // --- ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             
-            allTemplates.forEach(tpl => {
-                const card = document.createElement('div');
-                card.classList.add('template-card');
-                card.style.backgroundColor = tpl.color;
-                card.style.textShadow = "1px 1px 3px rgba(0,0,0,0.5)";
-                
-                if (selectedTemplates.some(t => t.id === tpl.id)) {
-                    card.classList.add('selected');
-                }
-
-                card.innerHTML = `<div class="template-icon">${tpl.icon}</div><div>${tpl.name}</div>`;
-                card.onclick = () => toggleTemplate(tpl);
-                
-                grid.appendChild(card);
-            });
+            document.getElementById(tabId + '-screen').classList.add('active');
+            event.target.classList.add('active');
         }
 
-        // --- 3. ВЫБОР ШАБЛОНОВ ---
-        function toggleTemplate(tpl) {
-            const index = selectedTemplates.findIndex(t => t.id === tpl.id);
-            if (index > -1) selectedTemplates.splice(index, 1);
-            else selectedTemplates.push(tpl);
-            
-            renderTemplates();
-            document.getElementById('bottom-bar').classList.toggle('active', selectedTemplates.length > 0);
-        }
+        // ==========================================
+        // ЛОГИКА РАСПИСАНИЯ
+        // ==========================================
+        // Начальные данные (как на твоей картинке)
+        let scheduleData = JSON.parse(localStorage.getItem('mySchedule')) || {
+            columns: ["1", "2", "3", "4", "5", "6", "7"], // Заголовки дней (редактируемые)
+            rows: [
+                { name: "Падём", time: "08:00", checks: [false, false, false, false, false, false, false] },
+                { name: "Умывание", time: "08:15", checks: [false, false, false, false, false, false, false] },
+                { name: "Спорт", time: "08:25", checks: [false, false, false, false, false, false, false] },
+                { name: "Завтрак", time: "08:40", checks: [false, false, false, false, false, false, false] },
+                { name: "Уроки", time: "09:00", checks: [false, false, false, false, false, false, false] }
+            ]
+        };
 
-        // --- 4. ДОБАВЛЕНИЕ СВОЕГО ШАБЛОНА ---
-        function handleKeyPress(e) { if (e.key === 'Enter') addCustomTemplate(); }
-
-        function addCustomTemplate() {
-            const input = document.getElementById('custom-input');
-            const name = input.value.trim();
-            if (!name) return;
-
-            const newColor = `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`;
-            const newIcon = ["⚽", "🎸", "🐶", "🍕", "🎮", "✈️"][Math.floor(Math.random() * 6)];
-            
-            const newTpl = { id: 'custom_' + Date.now(), name: name, color: newColor, icon: newIcon };
-            allTemplates.push(newTpl);
-            input.value = '';
-            toggleTemplate(newTpl);
-        }
-
-        // --- 5. СОЗДАНИЕ ТАБЛИЦЫ ---
-        function createCombinedTable() {
-            if (selectedTemplates.length === 0) return;
-
-            tableHeaders = selectedTemplates.map(t => t.name);
-            
-            document.getElementById('templates-screen').classList.remove('active');
-            document.getElementById('editor-screen').classList.add('active');
-            document.getElementById('bottom-bar').classList.remove('active');
-
-            // Формируем шапку с колонкой ВРЕМЯ
+        function renderSchedule() {
             const thead = document.getElementById('table-head');
+            const tbody = document.getElementById('table-body');
+            
+            // Рисуем шапку
             let headHtml = `<tr>
-                <th style="width: 40px;">№</th>
-                <th style="width: 110px;">День</th>
-                <th style="width: 110px;">⏰ Время</th>`;
-            tableHeaders.forEach((h) => { headHtml += `<th>${h}</th>`; });
-            headHtml += `<th>Свои задачи</th></tr>`;
+                <th contenteditable="true" onblur="editColName(-2, this.textContent)">Расписание</th>
+                <th contenteditable="true" onblur="editColName(-1, this.textContent)">Время</th>`;
+            scheduleData.columns.forEach((col, index) => {
+                headHtml += `<th contenteditable="true" onblur="editColName(${index}, this.textContent)">${col}</th>`;
+            });
+            headHtml += `</tr>`;
             thead.innerHTML = headHtml;
 
-            const saveKey = 'planner_time_' + tableHeaders.join('_');
-            const saved = localStorage.getItem(saveKey);
-            
-            if (saved) {
-                currentTableData = JSON.parse(saved);
-            } else {
-                currentTableData = [];
-                for (let i = 1; i <= 30; i++) {
-                    currentTableData.push({
-                        day: `День ${i}`,
-                        time: '', // Добавили поле времени
-                        checks: Array(tableHeaders.length).fill(false),
-                        notes: ''
-                    });
-                }
-            }
-            renderCombinedTable();
-        }
-
-        // --- 6. ОТРИСОВКА ТАБЛИЦЫ ---
-        function renderCombinedTable() {
-            const tbody = document.getElementById('table-body');
+            // Рисуем строки
             tbody.innerHTML = '';
-            
-            currentTableData.forEach((row, rIndex) => {
+            scheduleData.rows.forEach((row, rIndex) => {
                 const tr = document.createElement('tr');
                 
-                // №
-                const tdNum = document.createElement('td');
-                tdNum.textContent = rIndex + 1;
-                tdNum.style.textAlign = 'center';
-                tdNum.style.color = '#aaa';
+                // Название (Расписание)
+                const tdName = document.createElement('td');
+                tdName.contentEditable = true;
+                tdName.textContent = row.name;
+                tdName.onblur = (e) => { scheduleData.rows[rIndex].name = e.target.textContent; saveData(); };
                 
-                // День
-                const tdDay = document.createElement('td');
-                tdDay.textContent = row.day;
-                tdDay.contentEditable = true;
-                tdDay.classList.add('editable-cell');
-                tdDay.onblur = (e) => { currentTableData[rIndex].day = e.target.textContent; };
-                
-                // ВРЕМЯ
+                // Время
                 const tdTime = document.createElement('td');
-                tdTime.style.textAlign = 'center';
                 const timeInput = document.createElement('input');
                 timeInput.type = 'time';
-                timeInput.value = row.time || ''; // Загружаем время (или пусто)
-                timeInput.onchange = (e) => { 
-                    currentTableData[rIndex].time = e.target.value; 
-                    saveTable(); // Автосохранение при смене времени
-                };
+                timeInput.value = row.time;
+                timeInput.onchange = (e) => { scheduleData.rows[rIndex].time = e.target.value; saveData(); };
                 tdTime.appendChild(timeInput);
                 
-                tr.appendChild(tdNum);
-                tr.appendChild(tdDay);
-                tr.appendChild(tdTime); // Добавили ячейку времени
+                tr.appendChild(tdName);
+                tr.appendChild(tdTime);
 
                 // Чекбоксы
                 row.checks.forEach((isChecked, cIndex) => {
-                    const tdCheck = document.createElement('td');
-                    tdCheck.classList.add('check-cell');
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.checked = isChecked;
-                    checkbox.onchange = (e) => { 
-                        currentTableData[rIndex].checks[cIndex] = e.target.checked; 
-                        saveTable();
+                    const td = document.createElement('td');
+                    const cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.checked = isChecked;
+                    cb.onchange = (e) => { 
+                        scheduleData.rows[rIndex].checks[cIndex] = e.target.checked; 
+                        saveData(); 
                     };
-                    tdCheck.appendChild(checkbox);
-                    tr.appendChild(tdCheck);
+                    td.appendChild(cb);
+                    tr.appendChild(td);
                 });
 
-                // Заметки
-                const tdNotes = document.createElement('td');
-                tdNotes.textContent = row.notes;
-                tdNotes.contentEditable = true;
-                tdNotes.classList.add('editable-cell');
-                tdNotes.placeholder = "Что еще?";
-                tdNotes.onblur = (e) => { currentTableData[rIndex].notes = e.target.textContent; };
-
-                tr.appendChild(tdNotes);
                 tbody.appendChild(tr);
             });
         }
 
-        // --- 7. ДОБАВИТЬ ДЕНЬ ---
-        function addNewRow() {
-            const newDayNum = currentTableData.length + 1;
-            currentTableData.push({
-                day: `День ${newDayNum}`,
-                time: '',
-                checks: Array(tableHeaders.length).fill(false),
-                notes: ''
+        function editColName(index, newName) {
+            if (index >= 0) scheduleData.columns[index] = newName;
+            saveData();
+        }
+
+        function addColumn() {
+            scheduleData.columns.push("ПР"); // По умолчанию "ПР", можно переименовать кликом
+            scheduleData.rows.forEach(row => row.checks.push(false));
+            renderSchedule();
+            saveData();
+        }
+
+        function addRow() {
+            scheduleData.rows.push({
+                name: "Новое дело",
+                time: "12:00",
+                checks: Array(scheduleData.columns.length).fill(false)
             });
-            renderCombinedTable();
-            document.querySelector('.table-container').scrollTop = document.querySelector('.table-container').scrollHeight;
+            renderSchedule();
+            saveData();
         }
 
-        // --- 8. СОХРАНЕНИЕ ---
-        function saveTable() {
-            const saveKey = 'planner_time_' + tableHeaders.join('_');
-            localStorage.setItem(saveKey, JSON.stringify(currentTableData));
+        // ==========================================
+        // ЛОГИКА ДНЕВНИКА
+        // ==========================================
+        let diaryData = JSON.parse(localStorage.getItem('myDiary')) || {};
+        let currentDiaryDay = "1";
+
+        // Заполняем выпадающий список дней (от 1 до 30)
+        const daySelect = document.getElementById('diary-day-select');
+        for(let i=1; i<=30; i++) {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = `День ${i}`;
+            daySelect.appendChild(opt);
+        }
+
+        function loadDiary() {
+            currentDiaryDay = daySelect.value;
+            const data = diaryData[currentDiaryDay] || { text: "", mood: "", color: "#222222" };
             
-            const btn = document.querySelector('.btn-save');
-            btn.textContent = '✓ Сохранено';
-            btn.style.background = '#1e90ff'; // Синий при сохранении
-            setTimeout(() => { 
-                btn.textContent = 'Сохранить'; 
-                btn.style.background = '#2ed573';
-            }, 2000);
+            document.getElementById('diary-text').value = data.text;
+            document.getElementById('diary-color').value = data.color;
+            document.getElementById('diary-text').style.color = data.color;
+            
+            // Сброс смайликов
+            document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+            if (data.mood) {
+                // Ищем кнопку с нужным смайликом и активируем
+                const moods = ['😊', '😢', '😡', '😴'];
+                const moodIndex = moods.indexOf(data.mood);
+                if (moodIndex > -1) document.getElementById(`mood-${moodIndex+1}`).classList.add('active');
+            }
         }
 
-        // --- 9. НАЗАД ---
-        function goBackToTemplates() {
-            if (tableHeaders.length > 0) {
-                const saveKey = 'planner_time_' + tableHeaders.join('_');
-                localStorage.setItem(saveKey, JSON.stringify(currentTableData));
-            }
-            document.getElementById('editor-screen').classList.remove('active');
-            document.getElementById('templates-screen').classList.add('active');
-            if (selectedTemplates.length > 0) document.getElementById('bottom-bar').classList.add('active');
+        function saveDiary() {
+            const text = document.getElementById('diary-text').value;
+            const color = document.getElementById('diary-color').value;
+            
+            // Находим активный смайлик
+            let activeMood = "";
+            const moods = ['😊', '😢', '😡', '😴'];
+            document.querySelectorAll('.mood-btn').forEach((btn, idx) => {
+                if (btn.classList.contains('active')) activeMood = moods[idx];
+            });
+
+            diaryData[currentDiaryDay] = { text: text, mood: activeMood, color: color };
+            localStorage.setItem('myDiary', JSON.stringify(diaryData));
+            showSaveIndicator();
         }
+
+        function setMood(mood) {
+            // Снимаем выделение со всех
+            document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+            // Выделяем текущий
+            const moods = ['😊', '😢', '😡', '😴'];
+            const index = moods.indexOf(mood);
+            document.getElementById(`mood-${index+1}`).classList.add('active');
+            saveDiary();
+        }
+
+        function changeDiaryColor() {
+            const color = document.getElementById('diary-color').value;
+            document.getElementById('diary-text').style.color = color;
+            saveDiary();
+        }
+
+        // ==========================================
+        // ОБЩИЕ ФУНКЦИИ
+        // ==========================================
+        function saveData() {
+            localStorage.setItem('mySchedule', JSON.stringify(scheduleData));
+            showSaveIndicator();
+        }
+
+        let saveTimer;
+        function showSaveIndicator() {
+            const ind = document.getElementById('save-indicator');
+            ind.style.opacity = '1';
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => { ind.style.opacity = '0'; }, 1500);
+        }
+
+        // Инициализация
+        renderSchedule();
+        loadDiary();
     </script>
 </body>
 </html>
